@@ -1,1 +1,3 @@
-print("123")
+from fastapi import FastAPI
+
+app = FastAPI()
