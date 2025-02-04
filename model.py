@@ -26,8 +26,8 @@ class MemberModel(AbstractModel):
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     user_name: Mapped[str] = relationship(back_populates="events.members", uselist= True)
     gamesList: Mapped["Games"] = relationship(back_populates="games.name_game", uselist= False)
-    #gameWin: Mapped[str] = mapped_column()
-    #gamesPool: Mapped[list] = mapped_column()
+    gameWin: Mapped[str] = mapped_column()
+    gamesPool: Mapped[list] = relationship(back_populates="games.name_game", uselist= False)
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id"))
 
 class GameModel(AbstractModel):
