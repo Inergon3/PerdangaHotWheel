@@ -26,6 +26,6 @@ async def add_member_in_db(name: str, db: AsyncSession = Depends(get_db)):
 async def get_all_members(db: AsyncSession = Depends(get_db)):
     return await get_all_member(db)
 
-@app.get("/addGame")
-async def add_game_for_member(name_game: str, id_member: int, db: AsyncSession = Depends(get_db)):
-    return await add_game_player(name_game, id_member, db)
+@app.post("/addGame")
+async def add_game_for_member(name_game: str, name: str, db: AsyncSession = Depends(get_db)):
+    return await add_game_player(name_game, name, db)

@@ -17,7 +17,7 @@ class AbstractModel:
 class EventModel(AbstractModel):
     __tablename__ = "events"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    name_event: Mapped[str] = mapped_column()
+    name_event: Mapped[str] = mapped_column(unique=True)
     members: Mapped[list["MemberModel"]] = relationship(
         "MemberModel",
         secondary="eventmember",
@@ -34,13 +34,13 @@ class MemberModel(AbstractModel):
         secondary="eventmember",
         back_populates="members"
     )
-    gameWin: Mapped[str] = mapped_column()
+    gameWin: Mapped[str] = mapped_column(nullable=True)
 
 
 class GameModel(AbstractModel):
     __tablename__ = "games"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    name_game: Mapped[str] = mapped_column()
+    name_game: Mapped[str] = mapped_column(unique=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("members.id"))
 
 
