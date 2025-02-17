@@ -1,4 +1,6 @@
-from sqlalchemy import MetaData, ForeignKey
+import datetime
+
+from sqlalchemy import MetaData, ForeignKey, DateTime
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import as_declarative, Mapped, mapped_column, relationship
 
@@ -17,7 +19,9 @@ class AbstractModel:
 class EventModel(AbstractModel):
     __tablename__ = "events"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    name_event: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    start_event: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
+    end_event: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     members: Mapped[list["MemberModel"]] = relationship(
         "MemberModel",
         secondary="eventmember",
@@ -28,7 +32,7 @@ class EventModel(AbstractModel):
 class MemberModel(AbstractModel):
     __tablename__ = "members"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    user_name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     events: Mapped[list["EventModel"]] = relationship(
         "EventModel",
         secondary="eventmember",
@@ -40,8 +44,9 @@ class MemberModel(AbstractModel):
 class GameModel(AbstractModel):
     __tablename__ = "games"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
-    name_game: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column()
     user_id: Mapped[int] = mapped_column(ForeignKey("members.id"))
+    event_id: Mapped[int] = mapped_column(ForeignKey("events.id"))
 
 
 class EventMember(AbstractModel):
