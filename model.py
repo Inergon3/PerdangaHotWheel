@@ -25,7 +25,8 @@ class EventModel(AbstractModel):
     members: Mapped[list["MemberModel"]] = relationship(
         "MemberModel",
         secondary="eventmember",
-        back_populates="events"
+        back_populates="events",
+        cascade="all, delete-orphan"
     )
     def __repr__(self):
         return f"Event(id={self.id}, name='{self.name}', start_event='{self.start_event}, end_event='{self.end_event}')"
@@ -38,7 +39,8 @@ class MemberModel(AbstractModel):
     events: Mapped[list["EventModel"]] = relationship(
         "EventModel",
         secondary="eventmember",
-        back_populates="members"
+        back_populates="members",
+        cascade="all, delete-orphan"
     )
     gameWin: Mapped[str] = mapped_column(nullable=True)
 

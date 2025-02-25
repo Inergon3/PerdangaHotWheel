@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from model import MemberModel, EventModel, GameModel, EventMemberModel
@@ -28,7 +28,6 @@ async def add_member(member_name, db: AsyncSession):
         new_member = MemberModel(name=member_name)
         db.add(new_member)
         await db.commit()
-        # add_rel_member_event(member_name, event_name, db)
     finally:
         await db.close()
     return new_member
@@ -45,9 +44,10 @@ async def get_all_member(db: AsyncSession):
 
 async def get_member_for_name(name, db):
     try:
-        if await valid_member_name_or_event_name(name_member, type_table="Member", db) == 0:
-            raise HTTPException(status_code=404, detail=f'Error, name = {name_member} not found')
-        result = await db.execute(select(MemberModel).where(MemberModel.name != name))
+        type_table = "Member"
+        if await valid_member_name_or_event_name(name, type_table, db) == 0:
+            raise HTTPException(status_code=404, detail=f'Error, name = {name} not found')
+        result = await db.execute(select(MemberModel).where(MemberModel.name == name))
         event = result.scalars().first()
     finally:
         await db.close()
@@ -106,9 +106,10 @@ async def value_game_name(name, event_name, db: AsyncSession):
 
 async def get_event_for_name(name, db: AsyncSession):
     try:
-        if await valid_member_name_or_event_name(name_member, type_table="Event", db) == 0:
-            raise HTTPException(status_code=404, detail=f'Error, Event = {name_member} not found')
-        result = await db.execute(select(EventModel).where(EventModel.name == name))
+        type_table = "Event"
+        if await valid_member_name_or_event_name(name, type_table, db) == 0:
+            raise HTTPException(status_code=404, detail=f'Error, Event = {name} not found')
+        result = await db.execute(select(EventModel).where(EventModel.name.in_(name)))
         event = result.scalars().first()
     finally:
         await db.close()
@@ -119,10 +120,10 @@ async def add_member_in_event(member_name, event_name, db: AsyncSession):
     try:
         type_table = "Event"
         if await valid_member_name_or_event_name(event_name, type_table, db) == 0:
-            raise HTTPException(status_code=404, detail="Error, event not found")
+            raise HTTPException(status_code=404, detail=f"Error, event = {event_name} not found")
         type_table = "Member"
         if await valid_member_name_or_event_name(member_name, type_table, db) == 0:
-            raise HTTPException(status_code=404, detail="Error, member not found")
+            raise HTTPException(status_code=404, detail=f"Error, member = {member_name} not found")
         result = await db.execute(select(MemberModel).filter(MemberModel.name == member_name))
         member = result.scalars().first()
         result = await db.execute(select(EventModel).filter(EventModel.name == event_name))
@@ -148,7 +149,8 @@ async def valid_member_name_or_event_name(name, type_table, db: AsyncSession):
 
 
 async def get_event_for_member_participates(name_member, db: AsyncSession):
-    if await valid_member_name_or_event_name(name_member, type_table="Member", db) == 0:
+    type_table = "Member"
+    if await valid_member_name_or_event_name(name_member, type_table, db) == 0:
         raise HTTPException(status_code=404, detail=f'Error, name = {name_member} not found')
     subquery = (
         select(
@@ -173,7 +175,8 @@ async def get_event_for_member_participates(name_member, db: AsyncSession):
 
 
 async def get_event_for_member_not_participates(name_member, db: AsyncSession):
-    if await valid_member_name_or_event_name(name_member, type_table="Member", db) == 0:
+    type_table = "Member"
+    if await valid_member_name_or_event_name(name_member, type_table, db) == 0:
         raise HTTPException(status_code=404, detail=f'Error, name = {name_member} not found')
     subquery = (
         select(
@@ -196,4 +199,33 @@ async def get_event_for_member_not_participates(name_member, db: AsyncSession):
     result_all = result.scalars().all()
     return result_all
 
-# async def delite_event(name, db:AsyncSession)
+
+# async def find_event_or_member_or_game_for_name(name, type_model,db: AsyncSession):
+#     if type_model == "Event":
+#         model = EventModel
+#     elif type_model == "Member":
+#         model = MemberModel
+#     elif type_model == "Game":
+#         model = GameModel
+#     else:
+#         HTTPException(status_code=404, detail="Error, type_table not found")
+#     stmt = db.execute(select(model).where(model.name == name))
+#     result = stmt.scalars().firts()
+#     return result
+async def del_member_for_name(name, db: AsyncSession):
+    member = get_member_for_name(name, db)
+    if member:
+        await db.execute(MemberModel).filter(MemberModel.name.in_(name)).delete(synchronize_session=False)
+        db.commit()
+        return f'Member = {name} delited'
+    raise HTTPException(status_code=404, detail='Error')
+
+
+async def del_event_for_name(name, db: AsyncSession):
+    # event = get_event_for_name(name, db)
+    # if event:
+    stmt = delete(EventModel).where(EventModel.name.in_(name))
+    await db.execute(stmt)
+    db.commit()
+    return f'Event = {name} delited'
+    # raise HTTPException(status_code=404, detail='Error')

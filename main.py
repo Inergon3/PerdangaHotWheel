@@ -5,8 +5,10 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud import add_event, get_all_event, add_member, get_all_member, get_event_for_name, add_member_in_event, \
-    add_games_for_member, get_member_for_name, get_event_for_member_participates, get_event_for_member_not_participates
+    add_games_for_member, get_member_for_name, get_event_for_member_participates, get_event_for_member_not_participates, \
+    del_event_for_name, del_member_for_name
 from model import SessionLocal
+from schemas import NamesDelSchemas
 
 app = FastAPI()
 
@@ -57,16 +59,16 @@ async def add_event_member(name_event: str, name_member: str, db: AsyncSession =
     return await add_member_in_event(name_member, name_event, db)
 
 
-# """""""""""""" @app.delete("/delete/event/{name}")
-# """""""""""""" def del_event(name: list, db: AsyncSession = Depends(get_db)):
-# """"""""""""""     return
-# """"""""""""""
-# """"""""""""""
-# """""""""""""" @app.delete("/delete/member/{name}")
-# """""""""""""" def del_member(name, db: AsyncSession = Depends(get_db)):
-# """"""""""""""     return
-# """"""""""""""
-# """"""""""""""
+@app.delete("/delete/event/")
+async def del_event(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+    return await del_event_for_name(name.names, db)
+
+
+@app.delete("/delete/member/")
+async def del_member(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+    return await del_member_for_name(name.names, db)
+
+
 # """""""""""""" @app.delete("/delete/game/{name_member}/{name_game}")
 # """""""""""""" def del_game_for_member(name_member, name_game, db: AsyncSession = Depends(get_db)):
 # """"""""""""""     return
