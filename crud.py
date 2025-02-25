@@ -213,12 +213,13 @@ async def get_event_for_member_not_participates(name_member, db: AsyncSession):
 #     result = stmt.scalars().firts()
 #     return result
 async def del_member_for_name(name, db: AsyncSession):
-    member = get_member_for_name(name, db)
-    if member:
-        await db.execute(MemberModel).filter(MemberModel.name.in_(name)).delete(synchronize_session=False)
-        db.commit()
-        return f'Member = {name} delited'
-    raise HTTPException(status_code=404, detail='Error')
+    # member = get_member_for_name(name, db)
+    # if member:
+    stmt = delete(MemberModel).where(MemberModel.name.in_(name))
+    await db.execute(stmt)
+    await db.commit()
+    return f'Members = {name} delited'
+    # raise HTTPException(status_code=404, detail='Error')
 
 
 async def del_event_for_name(name, db: AsyncSession):
@@ -226,6 +227,6 @@ async def del_event_for_name(name, db: AsyncSession):
     # if event:
     stmt = delete(EventModel).where(EventModel.name.in_(name))
     await db.execute(stmt)
-    db.commit()
-    return f'Event = {name} delited'
+    await db.commit()
+    return f'Events = {name} delited'
     # raise HTTPException(status_code=404, detail='Error')

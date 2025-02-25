@@ -22,12 +22,13 @@ class EventModel(AbstractModel):
     name: Mapped[str] = mapped_column(unique=True)
     start_event: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     end_event: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
+
     members: Mapped[list["MemberModel"]] = relationship(
         "MemberModel",
         secondary="eventmember",
-        back_populates="events",
-        cascade="all, delete-orphan"
+        back_populates="events"
     )
+
     def __repr__(self):
         return f"Event(id={self.id}, name='{self.name}', start_event='{self.start_event}, end_event='{self.end_event}')"
 
@@ -36,12 +37,19 @@ class MemberModel(AbstractModel):
     __tablename__ = "members"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
+
     events: Mapped[list["EventModel"]] = relationship(
         "EventModel",
         secondary="eventmember",
-        back_populates="members",
+        back_populates="members"
+    )
+
+    games: Mapped[list["GameModel"]] = relationship(
+        "GameModel",
+        back_populates="member",
         cascade="all, delete-orphan"
     )
+
     gameWin: Mapped[str] = mapped_column(nullable=True)
 
 
@@ -49,11 +57,18 @@ class GameModel(AbstractModel):
     __tablename__ = "games"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     name: Mapped[str] = mapped_column()
-    user_id: Mapped[int] = mapped_column(ForeignKey("members.id"))
-    event_id: Mapped[int] = mapped_column(ForeignKey("events.id"))
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("members.id", ondelete="CASCADE"))
+    event_id: Mapped[int] = mapped_column(ForeignKey("events.id", ondelete="CASCADE"))
+
+    member: Mapped["MemberModel"] = relationship(
+        "MemberModel",
+        back_populates="games"
+    )
 
 
 class EventMemberModel(AbstractModel):
     __tablename__ = "eventmember"
-    event_id = mapped_column(ForeignKey("events.id"), primary_key=True)
-    member_id = mapped_column(ForeignKey("members.id"), primary_key=True)
+
+    event_id = mapped_column(ForeignKey("events.id", ondelete="CASCADE"), primary_key=True)
+    member_id = mapped_column(ForeignKey("members.id", ondelete="CASCADE"), primary_key=True)
