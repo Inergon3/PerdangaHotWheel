@@ -27,6 +27,8 @@ class EventModel(AbstractModel):
         secondary="eventmember",
         back_populates="events"
     )
+    def __repr__(self):
+        return f"Event(id={self.id}, name='{self.name}', start_event='{self.start_event}, end_event='{self.end_event}')"
 
 
 class MemberModel(AbstractModel):
@@ -49,7 +51,7 @@ class GameModel(AbstractModel):
     event_id: Mapped[int] = mapped_column(ForeignKey("events.id"))
 
 
-class EventMember(AbstractModel):
+class EventMemberModel(AbstractModel):
     __tablename__ = "eventmember"
     event_id = mapped_column(ForeignKey("events.id"), primary_key=True)
     member_id = mapped_column(ForeignKey("members.id"), primary_key=True)
