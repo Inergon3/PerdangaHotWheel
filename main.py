@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud import add_event, get_all_event, add_member, get_all_member, get_event_for_name, add_member_in_event, \
     add_games_for_member, get_member_for_name, get_event_for_member_participates, get_event_for_member_not_participates, \
-    del_event_for_name, del_member_for_name
+    del_events_for_name, del_members_for_name
 from model import SessionLocal
 from schemas import NamesDelSchemas
 
@@ -60,13 +60,13 @@ async def add_event_member(name_event: str, name_member: str, db: AsyncSession =
 
 
 @app.delete("/delete/event/")
-async def del_event(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
-    return await del_event_for_name(name.names, db)
+async def del_events_for_list_names(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+    return await del_events_for_name(name.names, db)
 
 
 @app.delete("/delete/member/")
-async def del_member(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
-    return await del_member_for_name(name.names, db)
+async def del_members_for_list_names(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+    return await del_members_for_name(name.names, db)
 
 
 # """""""""""""" @app.delete("/delete/game/{name_member}/{name_game}")
