@@ -80,13 +80,16 @@ async def get_events_for_member(name_member: str, db: AsyncSession = Depends(get
     not_participates = await get_event_for_member_not_participates(name_member, db)
     return f"Учавсвует:{participates} Не учавствует:{not_participates}"
 
+
 @app.get("/game/get/all")
 async def get_all_game(db: AsyncSession = Depends(get_db)):
     return await get_all_games(db)
 
+
 @app.get("/game/get/all/{name_event}")
 async def get_all_game_for_event(name_event, db: AsyncSession = Depends(get_db)):
-    return get_all_games_for_event(name_event,db)
+    return get_all_games_for_event(name_event, db)
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
