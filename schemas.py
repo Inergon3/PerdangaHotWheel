@@ -23,5 +23,5 @@ class EventMemberSchemas(BaseModel):
     event_id: int
     member_id: int
 
-class NamesDelSchemas(BaseModel):
+class NamesSchemas(BaseModel):
     names: list[str]

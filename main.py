@@ -8,7 +8,7 @@ from crud import add_event, get_all_event, add_member, get_all_member, get_event
     add_games_for_member, get_member_for_name, get_event_for_member_participates, get_event_for_member_not_participates, \
     del_events_for_name, del_members_for_name
 from model import SessionLocal
-from schemas import NamesDelSchemas
+from schemas import NamesSchemas
 
 app = FastAPI()
 
@@ -39,9 +39,19 @@ async def add_member_in_db(name: str, db: AsyncSession = Depends(get_db)):
     return await add_member(name, db)
 
 
+@app.get("/gevent/get/names")
+async def get_events_for_names(names: NamesSchemas, db: AsyncSession = Depends(get_db)):
+    return 0
+
+
 @app.get("/member/get/all")
 async def get_all_members(db: AsyncSession = Depends(get_db)):
     return await get_all_member(db)
+
+
+@app.get("/member/get/names")
+async def get_members_for_names(names: NamesSchemas, db: AsyncSession = Depends(get_db)):
+    return 0
 
 
 @app.get("/member/get/{name}")
@@ -60,12 +70,12 @@ async def add_event_member(name_event: str, name_member: str, db: AsyncSession =
 
 
 @app.delete("/delete/event/")
-async def del_events_for_list_names(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+async def del_events_for_list_names(name: NamesSchemas, db: AsyncSession = Depends(get_db)):
     return await del_events_for_name(name.names, db)
 
 
 @app.delete("/delete/member/")
-async def del_members_for_list_names(name: NamesDelSchemas, db: AsyncSession = Depends(get_db)):
+async def del_members_for_list_names(name: NamesSchemas, db: AsyncSession = Depends(get_db)):
     return await del_members_for_name(name.names, db)
 
 

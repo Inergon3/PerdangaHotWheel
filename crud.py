@@ -70,27 +70,6 @@ async def add_games_for_member(name_game, name_member, event_name, db: AsyncSess
     return new_game
 
 
-#
-# async def value_event_name(name, db: AsyncSession):
-#     try:
-#         result = db.execute(select(func.count()).select_from(EventModel).where(EventModel.name == name))
-#     finally:
-#         await db.close()
-#     if result != 0:
-#         return False
-#     return True
-#
-#
-# async def value_member_name(name, db: AsyncSession):
-#     try:
-#         result = db.execute(select(func.count()).select_from(MemberModel).where(MemberModel.name == name))
-#     finally:
-#         await db.close()
-#     if result != 0:
-#         return False
-#     return True
-#
-
 async def value_game_name(name, event_name, db: AsyncSession):
     try:
         event = await get_event_for_name(event_name, db)
@@ -104,16 +83,21 @@ async def value_game_name(name, event_name, db: AsyncSession):
     return True
 
 
-async def get_event_for_name(name, db: AsyncSession):
+async def get_event_for_name(names, db: AsyncSession):
     try:
         type_table = "Event"
-        if await valid_member_name_or_event_name(name, type_table, db) == 0:
-            raise HTTPException(status_code=404, detail=f'Error, Event = {name} not found')
-        result = await db.execute(select(EventModel).where(EventModel.name.in_(name)))
+        if isinstance(names, list):
+            event_not_found = []
+            for name in names:
+                if await valid_member_name_or_event_name(name, type_table, db) == 0:
+                    event_not_found.append(name)
+            if event_not_found != []:
+                raise HTTPException(status_code=404, detail=f'Error, Events: {event_not_found} not found')
+        result = await db.execute(select(EventModel).where(EventModel.name.in_(names)))
         event = result.scalars().first()
+        return event
     finally:
         await db.close()
-    return event
 
 
 async def add_member_in_event(member_name, event_name, db: AsyncSession):
@@ -143,7 +127,7 @@ async def valid_member_name_or_event_name(name, type_table, db: AsyncSession):
         table = EventModel
     else:
         raise HTTPException(status_code=404, detail="Error, type_table not found")
-    result = await db.execute(select(func.count()).select_from(table).filter(table.name == name))
+    result = await db.execute(select(func.count()).select_from(table).where(table.name == name))
     result_first = result.scalars().first()
     return result_first
 
@@ -200,33 +184,20 @@ async def get_event_for_member_not_participates(name_member, db: AsyncSession):
     return result_all
 
 
-# async def find_event_or_member_or_game_for_name(name, type_model,db: AsyncSession):
-#     if type_model == "Event":
-#         model = EventModel
-#     elif type_model == "Member":
-#         model = MemberModel
-#     elif type_model == "Game":
-#         model = GameModel
-#     else:
-#         HTTPException(status_code=404, detail="Error, type_table not found")
-#     stmt = db.execute(select(model).where(model.name == name))
-#     result = stmt.scalars().firts()
-#     return result
 async def del_members_for_name(name, db: AsyncSession):
-    # member = get_member_for_name(name, db)
-    # if member:
+    type_table = "Member"
+    if valid_member_name_or_event_name(name, type_table, db) == 0:
+        raise HTTPException(status_code=404, detail=f'Error, member = {name} not found')
     stmt = delete(MemberModel).where(MemberModel.name.in_(name))
     await db.execute(stmt)
     await db.commit()
     return f'Members = {name} delited'
-    # raise HTTPException(status_code=404, detail='Error')
 
 
-async def del_events_for_name(name, db: AsyncSession):
-    # event = get_event_for_name(name, db)
-    # if event:
-    stmt = delete(EventModel).where(EventModel.name.in_(name))
-    await db.execute(stmt)
-    await db.commit()
-    return f'Events = {name} delited'
-    # raise HTTPException(status_code=404, detail='Error')
+async def del_events_for_name(names, db: AsyncSession):
+    event = await get_event_for_name(names, db)
+    if event:
+        stmt = delete(EventModel).where(EventModel.name.in_(names))
+        await db.execute(stmt)
+        await db.commit()
+        return f'Events = {names} delited {event}'
