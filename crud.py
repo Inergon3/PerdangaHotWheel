@@ -211,6 +211,7 @@ async def del_events_for_name(names, db: AsyncSession):
         return f'Events = {names} delited'
     raise HTTPException(status_code=404, detail="Error")
 
+
 async def valid_game_for_member(game_name, member_name, db: AsyncSession):
     try:
         member = await get_member_for_name(member_name, db)
@@ -222,21 +223,25 @@ async def valid_game_for_member(game_name, member_name, db: AsyncSession):
     if result_first != 0:
         return False
     return True
-async def del_game_for_name_member_name(name, member_name, db:AsyncSession):
+
+
+async def del_game_for_name_member_name(name, member_name, db: AsyncSession):
     game = await get_game_for_member(name, member_name, db)
     db.delete(game)
     return f"{name} у {member_name} удален"
 
-async def get_game_for_member(game_name, member_name, db:AsyncSession):
+
+async def get_game_for_member(game_name, member_name, db: AsyncSession):
     if valid_game_for_member(game_name, member_name, db) == False:
-        member = get_member_for_name(member_name,db)
+        member = get_member_for_name(member_name, db)
         stmt = select(GameModel).where(and_(GameModel.user_id == member.id, GameModel.name == game_name))
         result = await db.execute(stmt)
         game = result.scalars().first()
         return game
     raise HTTPException(status_code=404, detail=f"{game_name} у {member_name} не найден")
 
-async def get_all_games(db:AsyncSession):
+
+async def get_all_games(db: AsyncSession):
     stmt = select(GameModel)
     result = await db.execute(stmt)
     games = result.scalars().all()
@@ -244,7 +249,8 @@ async def get_all_games(db:AsyncSession):
         return "Нет игр"
     return games
 
-async def get_all_games_for_event(event_name,db:AsyncSession):
+
+async def get_all_games_for_event(event_name, db: AsyncSession):
     stmt = select(GameModel).where(EventModel.name == event_name)
     result = await db.execute(stmt)
     games = result.scalars().all()
