@@ -66,6 +66,9 @@ class GameModel(AbstractModel):
         back_populates="games"
     )
 
+    def __repr__(self):
+        return f"Game(id={self.id}, name='{self.name}', user_id='{self.user_id}, event_id='{self.event_id}')"
+
 
 class EventMemberModel(AbstractModel):
     __tablename__ = "eventmember"

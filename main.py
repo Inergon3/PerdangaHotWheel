@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud import add_event, get_all_event, add_member, get_all_member, get_event_for_name, add_member_in_event, \
     add_games_for_member, get_member_for_name, get_event_for_member_participates, get_event_for_member_not_participates, \
-    del_events_for_name, del_members_for_name
+    del_events_for_name, del_members_for_name, del_game_for_name_member_name, get_all_games, get_all_games_for_event
 from model import SessionLocal
 from schemas import NamesSchemas
 
@@ -39,19 +39,9 @@ async def add_member_in_db(name: str, db: AsyncSession = Depends(get_db)):
     return await add_member(name, db)
 
 
-@app.get("/gevent/get/names")
-async def get_events_for_names(names: NamesSchemas, db: AsyncSession = Depends(get_db)):
-    return 0
-
-
 @app.get("/member/get/all")
 async def get_all_members(db: AsyncSession = Depends(get_db)):
     return await get_all_member(db)
-
-
-@app.get("/member/get/names")
-async def get_members_for_names(names: NamesSchemas, db: AsyncSession = Depends(get_db)):
-    return 0
 
 
 @app.get("/member/get/{name}")
@@ -79,9 +69,9 @@ async def del_members_for_list_names(name: NamesSchemas, db: AsyncSession = Depe
     return await del_members_for_name(name.names, db)
 
 
-# """""""""""""" @app.delete("/delete/game/{name_member}/{name_game}")
-# """""""""""""" def del_game_for_member(name_member, name_game, db: AsyncSession = Depends(get_db)):
-# """"""""""""""     return
+@app.delete("/delete/game/{name_member}/{name_game}")
+async def del_game_for_member(name_member, name_game, db: AsyncSession = Depends(get_db)):
+    return await del_game_for_name_member_name(name_game, name_member, db)
 
 
 @app.get("/get/events/{name_member}")
@@ -90,6 +80,13 @@ async def get_events_for_member(name_member: str, db: AsyncSession = Depends(get
     not_participates = await get_event_for_member_not_participates(name_member, db)
     return f"Учавсвует:{participates} Не учавствует:{not_participates}"
 
+@app.get("/game/get/all")
+async def get_all_game(db: AsyncSession = Depends(get_db)):
+    return await get_all_games(db)
+
+@app.get("/game/get/all/{name_event}")
+async def get_all_game_for_event(name_event, db: AsyncSession = Depends(get_db)):
+    return get_all_games_for_event(name_event,db)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", reload=True)
