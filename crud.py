@@ -18,7 +18,8 @@ class Event:
         return "Event создан"
 
     async def get_all(db: AsyncSession):
-        result = await db.execute(select(EventModel))
+        stmt = select(EventModel)
+        result = await db.execute(stmt)
         events = result.scalars().all()
         return events
 
@@ -33,7 +34,8 @@ class Event:
                 if event_not_found != []:
                     raise HTTPException(status_code=404, detail=f'Error, Events: {event_not_found} not found')
                 return True
-            result = await db.execute(select(EventModel).where(EventModel.name.in_(names)))
+            stmt = select(EventModel).where(EventModel.name.in_(names))
+            result = await db.execute(stmt)
             event = result.scalars().first()
             return event
         finally:
@@ -62,7 +64,8 @@ class Member:
 
     async def get_all(db: AsyncSession):
         try:
-            result = await db.execute(select(MemberModel))
+            stmt = select(MemberModel)
+            result = await db.execute(stmt)
             members = result.scalars().all()
         finally:
             await db.close()
@@ -78,7 +81,8 @@ class Member:
                         member_not_found.append(name)
                 if member_not_found != []:
                     raise HTTPException(status_code=404, detail=f'Error, Events: {member_not_found} not found')
-            result = await db.execute(select(MemberModel).where(MemberModel.name.in_(names)))
+            stmt = select(MemberModel).where(MemberModel.name.in_(names))
+            result = await db.execute(stmt)
             event = result.scalars().first()
             return event
         finally:
@@ -92,9 +96,11 @@ class Member:
             type_table = "Member"
             if await valid_member_name_or_event_name(member_name, type_table, db) == 0:
                 raise HTTPException(status_code=404, detail=f"Error, member = {member_name} not found")
-            result = await db.execute(select(MemberModel).filter(MemberModel.name == member_name))
+            stmt = select(MemberModel).filter(MemberModel.name == member_name)
+            result = await db.execute(stmt)
             member = result.scalars().first()
-            result = await db.execute(select(EventModel).filter(EventModel.name == event_name))
+            stmt = select(EventModel).filter(EventModel.name == event_name)
+            result = await db.execute(stmt)
             event = result.scalars().first()
             rel = EventMemberModel(event_id=event.id, member_id=member.id)
             db.add(rel)
@@ -172,9 +178,11 @@ class Game:
                                     detail=f"Game с именем = {name_game} в event = {event_name} уже есть")
             if await valid_game_for_member(name_game, name_member, db) != True:
                 raise HTTPException(status_code=404, detail=f"Game с именем = {name_game} у {name_member} уже есть")
-            result = await db.execute(select(MemberModel).filter(MemberModel.name == name_member))
+            stmt = select(MemberModel).filter(MemberModel.name == name_member)
+            result = await db.execute(stmt)
             member = result.scalars().first()
-            result = await db.execute(select(EventModel).filter(EventModel.name == event_name))
+            stmt = select(EventModel).filter(EventModel.name == event_name)
+            result = await db.execute(stmt)
             event = result.scalars().first()
             new_game = GameModel(name=name_game, user_id=member.id, event_id=event.id)
             db.add(new_game)
@@ -220,8 +228,9 @@ async def valid_game_name_for_event(name, event_name, db: AsyncSession):
     try:
         ob_event = Event
         event = await ob_event.get_for_name(event_name, db)
-        result = await db.execute(select(func.count()).select_from(GameModel).where(
-            and_(GameModel.name == name, GameModel.event_id == event.id)))
+        stmt = select(func.count()).select_from(GameModel).where(
+            and_(GameModel.name == name, GameModel.event_id == event.id))
+        result = await db.execute(stmt)
         result_first = result.scalars().first()
     finally:
         await db.close()
@@ -237,7 +246,8 @@ async def valid_member_name_or_event_name(name, type_table, db: AsyncSession):
         table = EventModel
     else:
         raise HTTPException(status_code=404, detail="Error, type_table not found")
-    result = await db.execute(select(func.count()).select_from(table).where(table.name == name))
+    stmt = select(func.count()).select_from(table).where(table.name == name)
+    result = await db.execute(stmt)
     result_first = result.scalars().first()
     return result_first
 
@@ -246,8 +256,9 @@ async def valid_game_for_member(game_name, member_name, db: AsyncSession):
     try:
         ob_member = Member
         member = await ob_member.get_for_name(member_name, db)
-        result = await db.execute(select(func.count()).select_from(GameModel).where(
-            and_(GameModel.name == game_name, GameModel.user_id == member.id)))
+        stmt = select(func.count()).select_from(GameModel).where(
+            and_(GameModel.name == game_name, GameModel.user_id == member.id))
+        result = await db.execute(stmt)
         result_first = result.scalars().first()
     finally:
         await db.close()
