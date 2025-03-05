@@ -23,5 +23,7 @@ class EventMemberSchemas(BaseModel):
     event_id: int
     member_id: int
 
+class IdSchemas(BaseModel):
+    id: list[int]
 class NamesSchemas(BaseModel):
     names: list[str]
