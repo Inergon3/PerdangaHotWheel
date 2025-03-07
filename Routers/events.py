@@ -1,6 +1,7 @@
 import datetime
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.dialects.postgresql import json
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from crud import Event

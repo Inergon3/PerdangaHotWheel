@@ -35,8 +35,11 @@ async def del_members_from_list_names(name: NamesSchemas, db: AsyncSession = Dep
     return await member.del_for_name(name.names, db)
 
 
-@router.get("/get/{name_member}")
-async def get_events_for_member(name_member: str, db: AsyncSession = Depends(get_db)):
-    participates = await member.get_participates_events(name_member, db)
-    not_participates = await member.get_not_participates_events(name_member, db)
-    return f"Учавсвует:{participates} Не учавствует:{not_participates}"
+@router.get("/get/events/{member_id}")
+async def get_events_for_member(member_id: int, db: AsyncSession = Depends(get_db)):
+    participates = await member.get_participates_events(member_id, db)
+    not_participates = await member.get_not_participates_events(member_id, db)
+    return {
+        "Учавствует": participates,
+        "Не учавствует": not_participates
+    }
