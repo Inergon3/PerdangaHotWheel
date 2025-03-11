@@ -1,5 +1,7 @@
+import random
+
 from fastapi import HTTPException
-from sqlalchemy import select, delete, func
+from sqlalchemy import select, delete, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from model import EventModel, MemberModel, EventMemberModel, GameModel
@@ -36,7 +38,7 @@ class Event:
         stmt = select(EventModel).where(EventModel.id.in_(id_list))
         result = await db.execute(stmt)
         events = result.scalars().all()
-        await valid_cound_id(events, id_list)
+        await valid_count_id(events, id_list)
         return events
 
     async def del_for_id(self, event_id, db: AsyncSession):
@@ -77,7 +79,7 @@ class Member:
         stmt = select(MemberModel).where(MemberModel.id.in_(id_list))
         result = await db.execute(stmt)
         events = result.scalars().all()
-        await valid_cound_id(events, id_list)
+        await valid_count_id(events, id_list)
         return events
 
     async def get_for_id(self, id, db: AsyncSession):
@@ -164,113 +166,78 @@ class Member:
 class Game:
     pass
 
-    # async def add_for_member(self, name_game, name_member, event_id, db: AsyncSession):
-    #     try:
-    #         # if await valid_game_name_for_event(name_game, event_id, db) != True:
-    #         #     raise HTTPException(status_code=404,
-    #         #                         detail=f"Game с именем = {name_game} в event = {event_id} уже есть")
-    #         # if await valid_game_for_member(name_game, name_member, db) != True:
-    #         #     raise HTTPException(status_code=404, detail=f"Game с именем = {name_game} у {name_member} уже есть")
-    #         stmt = select(MemberModel).filter(MemberModel.name == name_member)
-    #         result = await db.execute(stmt)
-    #         member = result.scalars().first()
-    #         stmt = select(EventModel).filter(EventModel.id == event_id)
-    #         result = await db.execute(stmt)
-    #         event = result.scalars().first()
-    #         if member == None:
-    #             raise HTTPException(status_code=404, detail="member not found")
-    #         if event == None:
-    #             raise HTTPException(status_code=404, detail="event not found")
-    #         new_game = GameModel(name=name_game, user_id=member.id, event_id=event.id)
-    #         db.add(new_game)
-    #         await db.commit()
-    #     finally:
-    #         await db.close()
-    #     return new_game
+    async def add_for_member(self, name_game, member_id, event_id, db: AsyncSession):
+        try:
 
+            ob_member = Member()
+            member = await ob_member.get_for_id(member_id, db)
+            ob_event = Event()
+            event = await ob_event.get_for_id(event_id, db)
+            await self.check_for_game_in_event(name_game, event_id, db)
+            await self.check_for_game_in_memebr(name_game, member_id, db)
 
-#
-#     async def del_game_for_name_member_name(self, name, member_name, db: AsyncSession):
-#         ob_game = Game
-#         game = await ob_game.get_for_member(name, member_name, db)
-#         db.delete(game)
-#         return f"{name} у {member_name} удален"
-#
-#     async def get_for_member(self, game_name, member_name, db: AsyncSession):
-#         if valid_game_for_member(game_name, member_name, db) == False:
-#             ob_member = Member
-#             member = ob_member.get_for_name(member_name, db)
-#             stmt = select(GameModel).where(and_(GameModel.user_id == member.id, GameModel.name == game_name))
-#             result = await db.execute(stmt)
-#             game = result.scalars().first()
-#             return game
-#         raise HTTPException(status_code=404, detail=f"{game_name} у {member_name} не найден")
-#
-#     async def get_all(self, db: AsyncSession):
-#         stmt = select(GameModel)
-#         result = await db.execute(stmt)
-#         games = result.scalars().all()
-#         if games == []:
-#             return "Нет игр"
-#         return games
-#
-#     async def get_all_from_event(self, event_name, db: AsyncSession):
-#         stmt = select(GameModel).where(EventModel.name == event_name)
-#         result = await db.execute(stmt)
-#         games = result.scalars().all()
-#         if games == []:
-#             return f"В event {event_name} нет игр"
-#         return games
-#
-#     async def get_random_game_from_event(self, member_id, event_id, db: AsyncSession):
-#         stmt = select(GameModel).where.and_(GameModel.user_id != member_id, GameModel.event_id == event_id)
-#         result = await db.execute(stmt)
-#         game_list = result.scalars().all()
-#         random_game = random.choice(game_list)
-#         return random_game
-#
-#
-# async def valid_game_name_for_event(name, event_id, db: AsyncSession):
-#     try:
-#         ob_event = Event
-#         event = await ob_event.get_for_id(event_id, db)
-#         stmt = select(func.count()).select_from(GameModel).where(
-#             and_(GameModel.name == name, GameModel.event_id == event.id))
-#         result = await db.execute(stmt)
-#         result_first = result.scalars().first()
-#     finally:
-#         await db.close()
-#     if result_first != 0:
-#         return False
-#     return True
-#
-#
-# async def valid_member_name_or_event_name(name, type_table, db: AsyncSession):
-#     if type_table == "Member":
-#         table = MemberModel
-#     elif type_table == "Event":
-#         table = EventModel
-#     else:
-#         raise HTTPException(status_code=404, detail="Error, type_table not found")
-#     stmt = select(func.count()).select_from(table).where(table.name == name)
-#     result = await db.execute(stmt)
-#     result_first = result.scalars().first()
-#     return result_first
-#
-#
-# async def valid_game_for_member(game_name, member_name, db: AsyncSession):
-#     try:
-#         ob_member = Member
-#         member = await ob_member.get_for_name(member_name, db)
-#         stmt = select(func.count()).select_from(GameModel).where(
-#             and_(GameModel.name == game_name, GameModel.user_id == member.id))
-#         result = await db.execute(stmt)
-#         result_first = result.scalars().first()
-#     finally:
-#         await db.close()
-#     if result_first != 0:
-#         return False
-#     return True
+            new_game = GameModel(name=name_game, user_id=member.id, event_id=event.id)
+            db.add(new_game)
+            await db.commit()
+        finally:
+            await db.close()
+        return new_game
+
+    async def check_for_game_in_event(self, game_name, event_id, db: AsyncSession):
+        stmt = select(GameModel).where(and_(GameModel.name == game_name, GameModel.event_id == event_id))
+        result = await db.execute(stmt)
+        game = result.scalars().first()
+        if game != None:
+            raise HTTPException(status_code=404, detail="Игра в этом event уже есть")
+        return True
+
+    async def check_for_game_in_memebr(self, game_name, member_id, db: AsyncSession):
+        stmt = select(GameModel).where(and_(GameModel.name == game_name, GameModel.user_id == member_id))
+        result = await db.execute(stmt)
+        game = result.scalars().first()
+        if game != None:
+            raise HTTPException(status_code=404, detail="У этого member уже есть эта game")
+        return True
+
+    async def del_game_for_name_member_name(self, game_name, member_id, event_id, db: AsyncSession):
+        game = await self.get_for_member(game_name, member_id, event_id, db)
+        db.delete(game)
+        return "Delited"
+
+    async def get_for_member(self, game_name, member_id, event_id, db: AsyncSession):
+        ob_member = Member()
+        member = await ob_member.get_for_id(member_id, db)
+        stmt = select(GameModel).where(
+            and_(GameModel.user_id == member.id, GameModel.name == game_name, GameModel.id == event_id))
+        result = await db.execute(stmt)
+        game = result.scalars().first()
+        if game == None:
+            raise HTTPException(status_code=404, detail="Game not found")
+        return game
+
+    async def get_all(self, db: AsyncSession):
+        stmt = select(GameModel)
+        result = await db.execute(stmt)
+        games = result.scalars().all()
+        if games == []:
+            raise HTTPException(status_code=404, detail="Нет игр")
+        return games
+
+    async def get_all_from_event(self, event_id, db: AsyncSession):
+        stmt = select(GameModel).where(EventModel.id == event_id)
+        result = await db.execute(stmt)
+        games = result.scalars().all()
+        if games == []:
+            raise HTTPException(status_code=404, detail="В event нет игр")
+        return games
+
+    async def get_random_game_from_event(self, member_id, event_id, db: AsyncSession):
+        stmt = select(GameModel).where.and_(GameModel.user_id != member_id, GameModel.event_id == event_id)
+        result = await db.execute(stmt)
+        game_list = result.scalars().all()
+        random_game = random.choice(game_list)
+        return random_game
+
 
 class EventMember:
     async def get_all(self, db: AsyncSession):
@@ -282,7 +249,7 @@ class EventMember:
         return events_members
 
 
-async def valid_cound_id(id_list1, id_list2):
+async def valid_count_id(id_list1, id_list2):
     if len(id_list1) != len(id_list2):
         found_ids = {event.id for event in id_list1}
         missing_ids = [id for id in id_list2 if id not in found_ids]

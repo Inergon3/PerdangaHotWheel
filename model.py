@@ -56,6 +56,7 @@ class MemberModel(AbstractModel):
     #gameWin: Mapped[str] = mapped_column(nullable=True)
 
 
+
 class GameModel(AbstractModel):
     __tablename__ = "games"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)

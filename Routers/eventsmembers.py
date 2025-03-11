@@ -9,7 +9,7 @@ member = Member()
 event_members = EventMember()
 
 
-@router.post("/add/id_event={id_event},idmember={id_member}")
+@router.post("/add/id_event={id_event},id_member={id_member}")
 async def add_event_for_member(id_event: int, id_member: int, db: AsyncSession = Depends(get_db)):
     return await member.add_in_event(id_member, id_event, db)
 
