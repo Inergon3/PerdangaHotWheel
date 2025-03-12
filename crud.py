@@ -17,7 +17,7 @@ class Event:
             return "Error"
         finally:
             await db.close()
-        return "Event создан"
+        return new_event
 
     async def get_all(self, db: AsyncSession):
         stmt = select(EventModel)
@@ -34,11 +34,16 @@ class Event:
         return event
 
     async def get_for_id_list(self, id_list, db: AsyncSession):
-        id_list = await str_list_to_int_list(id_list)
-        stmt = select(EventModel).where(EventModel.id.in_(id_list))
-        result = await db.execute(stmt)
-        events = result.scalars().all()
-        await valid_count_id(events, id_list)
+        print(id_list)
+        print(type(id_list))
+        if id_list is not None:
+            id_list = await str_list_to_int_list(id_list)
+            stmt = select(EventModel).where(EventModel.id.in_(id_list))
+            result = await db.execute(stmt)
+            events = result.scalars().all()
+            await valid_count_id(events, id_list)
+            return events
+        events = await self.get_all(db)
         return events
 
     async def del_for_id(self, event_id, db: AsyncSession):
@@ -46,10 +51,7 @@ class Event:
         stmt = delete(EventModel).where(EventModel.id.in_(event_id))
         await db.execute(stmt)
         await db.commit()
-        return {
-            "message": "Events deleted successfully",
-            "deleted_events": events
-        }
+        return events
 
 
 #
@@ -149,10 +151,7 @@ class Member:
         stmt = delete(EventModel).where(EventModel.id.in_(member_id))
         await db.execute(stmt)
         await db.commit()
-        return {
-            "message": "Memebers deleted successfully",
-            "deleted_members": members
-        }
+        return members
 
     # async def add_win_game(self, member_name, event_name, db: AsyncSession):
     #     member = self.get_for_name(member_name,db)
@@ -202,7 +201,7 @@ class Game:
     async def del_game_for_name_member_name(self, game_name, member_id, event_id, db: AsyncSession):
         game = await self.get_for_member(game_name, member_id, event_id, db)
         db.delete(game)
-        return "Delited"
+        return game
 
     async def get_for_member(self, game_name, member_id, event_id, db: AsyncSession):
         ob_member = Member()
@@ -256,8 +255,7 @@ async def valid_count_id(id_list1, id_list2):
         raise HTTPException(status_code=404, detail={
             "message": "Object with the following IDs were not found:",
             "not found object": missing_ids
-        }
-                            )
+        })
 
 
 async def str_list_to_int_list(id_list):
