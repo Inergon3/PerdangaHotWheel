@@ -5,6 +5,7 @@ from Routers.events import router as events_router
 from Routers.eventsmembers import router as eventsmembers_router
 from Routers.games import router as games_router
 from Routers.members import router as members_router
+from Routers.auth import router as auth_router
 
 app = FastAPI()
 
@@ -12,6 +13,7 @@ app.include_router(events_router)
 app.include_router(members_router)
 app.include_router(games_router)
 app.include_router(eventsmembers_router)
+app.include_router(auth_router)
 
 
 @app.get("/")
