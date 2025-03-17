@@ -1,9 +1,9 @@
-from typing import Optional, Annotated
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from crud import Event
+from Crud.Event import Event
 from model import get_db
 from schemas import IdSchemas, EventSchemas
 
@@ -27,7 +27,7 @@ async def add_event_in_db(event1: EventSchemas, db: AsyncSession = Depends(get_d
 
 @router.get("/get")
 async def get_events_for_list(
-        id_list: Annotated[Optional[str], Query(description="Список идентификаторов, разделенных запятыми")] = None,
+        id_list: Optional[str] = Query(default=None, description="Список идентификаторов, разделенных запятыми"),
         db: AsyncSession = Depends(get_db)):
     result = await event.get_for_id_list(id_list, db)
     return {
