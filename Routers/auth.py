@@ -1,11 +1,13 @@
 from authlib.integrations.starlette_client import OAuth
-from fastapi import FastAPI, Request, Depends, HTTPException
-from fastapi.responses import RedirectResponse
+from fastapi import Request, APIRouter
 from starlette.config import Config
 
+from config import steam_api_key
+
+router = APIRouter(prefix="/auth", tags=["auth"])
 config_data = {
     'STEAM_OPENID_URL': 'https://steamcommunity.com/openid',
-    'STEAM_API_KEY': 'your-steam-api-key'
+    'STEAM_API_KEY': steam_api_key
 }
 config = Config(environ=config_data)
 

@@ -1,4 +1,10 @@
-host = "127.0.0.1"
-user = "inergon"
-password_bd = "000987"
-db_name = "db_perdangaTest"
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+host = os.getenv("host")
+user = os.getenv("user")
+password_bd = os.getenv("password_bd")
+db_name = os.getenv("db_name")
+steam_api_key = os.getenv("steam_api_key")
