@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import MetaData, ForeignKey, DateTime
+from sqlalchemy import MetaData, ForeignKey, DateTime, BigInteger
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import as_declarative, Mapped, mapped_column, relationship
 
@@ -40,6 +40,7 @@ class MemberModel(AbstractModel):
     __tablename__ = "members"
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
+    steam_id: Mapped[str] = mapped_column(unique=True)
 
     events: Mapped[list["EventModel"]] = relationship(
         "EventModel",

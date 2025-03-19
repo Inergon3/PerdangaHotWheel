@@ -7,15 +7,10 @@ from model import EventModel
 
 
 class Event:
-    async def add(self, name, start_event, end_event, db: AsyncSession):
-        try:
-            new_event = EventModel(name=name, start_event=start_event, end_event=end_event)
-            db.add(new_event)
-            await db.commit()
-        except:
-            return "Error"
-        finally:
-            await db.close()
+    async def add(self, name, start_event, end_event, db: AsyncSession, user):
+        new_event = EventModel(name=name, start_event=start_event, end_event=end_event)
+        db.add(new_event)
+        await db.commit()
         return new_event
 
     async def get_all(self, db: AsyncSession):
@@ -33,8 +28,6 @@ class Event:
         return event
 
     async def get_for_id_list(self, id_list, db: AsyncSession):
-        print(id_list)
-        print(type(id_list))
         if id_list is not None:
             id_list = await str_list_to_int_list(id_list)
             stmt = select(EventModel).where(EventModel.id.in_(id_list))
