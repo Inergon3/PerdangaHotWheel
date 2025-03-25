@@ -1,7 +1,7 @@
 import os
 
 import httpx
-from fastapi import Depends, HTTPException, Request, Response, APIRouter
+from fastapi import Depends, HTTPException, Request, APIRouter
 from fastapi.responses import RedirectResponse
 from openid.consumer.consumer import Consumer, SUCCESS
 from openid.store.filestore import FileOpenIDStore
@@ -36,13 +36,10 @@ async def get_steam_user_info(steam_id: str, api_key: str):
 
 @router.get("/login")
 async def login(request: Request):
-    """ Перенаправление пользователя на страницу авторизации Steam """
     auth_request = openid_consumer.begin("https://steamcommunity.com/openid")
 
-    # Получаем URL возврата (если был передан)
     return_url = request.query_params.get("redirect", "http://localhost:5500/")
 
-    # Сохраняем return_url в параметрах колбэка
     callback_url = str(request.url_for("callback")) + f"?redirect={return_url}"
 
     redirect_url = auth_request.redirectURL(
@@ -54,7 +51,6 @@ async def login(request: Request):
 
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
-    """ Обработка ответа от Steam после авторизации """
     query_params = dict(request.query_params)
     response = openid_consumer.complete(query_params, str(request.url))
 
@@ -65,21 +61,17 @@ async def callback(request: Request, db: Session = Depends(get_db)):
         user_info = await get_steam_user_info(steam_id_int, STEAM_API_KEY)
         user_name = user_info.get("personaname", "Unknown") if user_info else "Unknown"
 
-        # Проверяем, есть ли пользователь в базе
         stmt = select(MemberModel).where(MemberModel.steam_id == steam_id_str)
         result = await db.execute(stmt)
         user = result.scalars().first()
 
-        # Если пользователя нет, создаем его
         if not user:
             user = MemberModel(steam_id=steam_id_str, name=user_name)
             db.add(user)
             await db.commit()
 
-        # Получаем redirect URL, переданный при авторизации
         return_url = request.query_params.get("redirect", "http://localhost:5500/")
 
-        # Создаем ответ и устанавливаем cookie
         response = RedirectResponse(url=return_url)
         response.set_cookie(key="session", value=steam_id_str, httponly=True, max_age=3600)
 
