@@ -1,16 +1,11 @@
-import jwt
-from fastapi import HTTPException, Depends, Cookie
+from fastapi import HTTPException
+from fastapi import HTTPException
 from fastapi.security import APIKeyCookie
-from requests import Session
-from sqlalchemy import select
 
-from Routers.auth import verify_jwt_token
-from config import JWT_ALGORITHM, SECRET_KEY
-from model import get_db, MemberModel
+from config import SECRET_KEY
 
 cookie_sec = APIKeyCookie(name="session")
 JWT_SECRET = SECRET_KEY
-
 
 
 async def valid_count_id(id_list1, id_list2):
@@ -30,8 +25,3 @@ async def str_list_to_int_list(id_list):
         for id in id_list_str:
             id_list.append(int(id))
     return id_list
-
-
-async def auth(user):
-    if not user:
-        raise HTTPException(status_code=403, detail="Not auth")
