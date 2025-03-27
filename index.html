@@ -36,9 +36,6 @@
 
                 const data = await response.json();
                 document.getElementById("events").innerText = JSON.stringify(data, null, 2);
-            } catch (error) {
-                console.error("Ошибка:", error);
-                document.getElementById("status").innerText = "Вы не авторизованы!";
             }
         }
     </script>

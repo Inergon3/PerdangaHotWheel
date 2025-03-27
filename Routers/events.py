@@ -13,8 +13,8 @@ event = Event()
 
 
 @router.post("/add")
-async def add_event_in_db(event1: EventSchemas, db: AsyncSession = Depends(get_db), user: MemberModel = Depends(get_current_user)):
-    await auth(user)
+async def add_event_in_db(event1: EventSchemas, db: AsyncSession = Depends(get_db)):
+    get_current_user
     await event.add(event1.name, event1.event_start, event1.event_end, db)
     return
 
@@ -32,6 +32,7 @@ async def get_events_for_list(
         id_list: Optional[str] = Query(default=None, description="Список идентификаторов, разделенных запятыми"),
         db: AsyncSession = Depends(get_db),
         user: MemberModel = Depends(get_current_user)):
+
     await auth(user)
     result = await event.get_for_id_list(id_list, db)
     return {

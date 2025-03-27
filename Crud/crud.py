@@ -1,19 +1,25 @@
+import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import APIKeyCookie
-from requests import Session
-from sqlalchemy import select
 
-
-from model import MemberModel, get_db
+from config import JWT_ALGORITHM, SECRET_KEY
 
 cookie_sec = APIKeyCookie(name="session")
-async def get_current_user(session: str = Depends(cookie_sec), db: Session = Depends(get_db)):
-    stmt = select(MemberModel).where(MemberModel.steam_id == session)
-    result = await db.execute(stmt)
-    user = result.scalars().first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Недействительная сессия")
-    return user
+JWT_SECRET = SECRET_KEY
+
+
+def get_current_user(token: str = Depends(lambda token: token)):
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        steam_id = payload.get("sub")
+        if steam_id is None:
+            raise HTTPException(status_code=401, detail="Недействительный токен")
+        return steam_id
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Токен истёк")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Недействительный токен")
+
 
 async def valid_count_id(id_list1, id_list2):
     if len(id_list1) != len(id_list2):
@@ -32,6 +38,7 @@ async def str_list_to_int_list(id_list):
         for id in id_list_str:
             id_list.append(int(id))
     return id_list
+
 
 async def auth(user):
     if not user:
