@@ -1,24 +1,16 @@
 import jwt
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Cookie
 from fastapi.security import APIKeyCookie
+from requests import Session
+from sqlalchemy import select
 
+from Routers.auth import verify_jwt_token
 from config import JWT_ALGORITHM, SECRET_KEY
+from model import get_db, MemberModel
 
 cookie_sec = APIKeyCookie(name="session")
 JWT_SECRET = SECRET_KEY
 
-
-def get_current_user(token: str = Depends(lambda token: token)):
-    try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        steam_id = payload.get("sub")
-        if steam_id is None:
-            raise HTTPException(status_code=401, detail="Недействительный токен")
-        return steam_id
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Токен истёк")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Недействительный токен")
 
 
 async def valid_count_id(id_list1, id_list2):

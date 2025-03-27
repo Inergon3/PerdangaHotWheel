@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from Crud.crud import auth, get_current_user
+from Crud.crud import auth
 from Crud.objects import member_obj, eventmember_obj
+from Routers.auth import get_current_user
 from model import get_db, MemberModel
 from schemas import EventsMembersSchemas
 
