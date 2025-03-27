@@ -21,6 +21,8 @@ STEAM_API_KEY = steam_api_key
 JWT_SECRET = SECRET_KEY
 JWT_EXPIRE_MINUTES = 60
 
+const_return_url = "http://localhost:5500/"
+
 
 async def get_steam_user_info(steam_id: str, api_key: str):
     url = f"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={api_key}&steamids={steam_id}"
@@ -69,7 +71,7 @@ async def get_current_user(token: str = Cookie(None), db: Session = Depends(get_
 async def login(request: Request):
     """Перенаправляет пользователя на Steam OpenID."""
     auth_request = openid_consumer.begin("https://steamcommunity.com/openid")
-    return_url = request.query_params.get("redirect", "http://localhost:5500/")
+    return_url = request.query_params.get("redirect", const_return_url)
     callback_url = str(request.url_for("callback")) + f"?redirect={return_url}"
     redirect_url = auth_request.redirectURL(return_to=callback_url, realm=str(request.base_url))
     return RedirectResponse(redirect_url)
@@ -104,7 +106,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
     # Генерируем JWT токен
     token = create_jwt_token(steam_id)
 
-    return_url = request.query_params.get("redirect", "http://localhost:5500/")
+    return_url = request.query_params.get("redirect", const_return_url)
 
     response = RedirectResponse(url=return_url)
     response.set_cookie(key="token", value=token, httponly=True, max_age=3600, secure=False, samesite="Lax")
@@ -121,6 +123,6 @@ async def protected_route(user: MemberModel = Depends(get_current_user)):
 @router.get("/logout")
 async def logout():
     """Выход: удаление JWT cookie."""
-    response = RedirectResponse(url="http://localhost:5500/")
+    response = RedirectResponse(url=const_return_url)
     response.delete_cookie("token")
     return response
