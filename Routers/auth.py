@@ -51,7 +51,6 @@ def verify_jwt_token(token: str):
 
 
 async def get_current_user(token: str = Cookie(None), db: Session = Depends(get_db)):
-    """Извлекает токен из cookie и проверяет его."""
     if not token:
         raise HTTPException(status_code=401, detail="Токен отсутствует в cookie")
 
@@ -69,7 +68,6 @@ async def get_current_user(token: str = Cookie(None), db: Session = Depends(get_
 
 @router.get("/login")
 async def login(request: Request):
-    """Перенаправляет пользователя на Steam OpenID."""
     auth_request = openid_consumer.begin("https://steamcommunity.com/openid")
     return_url = request.query_params.get("redirect", const_return_url)
     callback_url = str(request.url_for("callback")) + f"?redirect={return_url}"
@@ -79,7 +77,6 @@ async def login(request: Request):
 
 @router.get("/callback")
 async def callback(request: Request, db: Session = Depends(get_db)):
-    """Обрабатывает ответ от Steam после авторизации."""
     query_params = dict(request.query_params)
     response = openid_consumer.complete(query_params, str(request.url))
 
@@ -88,22 +85,18 @@ async def callback(request: Request, db: Session = Depends(get_db)):
 
     steam_id = response.identity_url.split("/")[-1]
 
-    # Получаем имя пользователя из Steam API
     user_info = await get_steam_user_info(steam_id, STEAM_API_KEY)
     user_name = user_info.get("personaname", "Unknown") if user_info else "Unknown"
 
-    # Проверяем, есть ли пользователь в базе
     stmt = select(MemberModel).where(MemberModel.steam_id == steam_id)
     result = await db.execute(stmt)
     user = result.scalars().first()
 
-    # Если пользователя нет — создаем его
     if not user:
         user = MemberModel(steam_id=steam_id, name=user_name)
         db.add(user)
         await db.commit()
 
-    # Генерируем JWT токен
     token = create_jwt_token(steam_id)
 
     return_url = request.query_params.get("redirect", const_return_url)
@@ -116,13 +109,11 @@ async def callback(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/protected")
 async def protected_route(user: MemberModel = Depends(get_current_user)):
-    """Пример защищенного маршрута, доступного только авторизованным пользователям."""
     return {"message": f"Привет, {user.name}!"}
 
 
 @router.get("/logout")
 async def logout():
-    """Выход: удаление JWT cookie."""
     response = RedirectResponse(url=const_return_url)
     response.delete_cookie("token")
     return response
