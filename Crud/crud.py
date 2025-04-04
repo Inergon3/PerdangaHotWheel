@@ -1,11 +1,4 @@
 from fastapi import HTTPException
-from fastapi import HTTPException
-from fastapi.security import APIKeyCookie
-
-from config import SECRET_KEY
-
-cookie_sec = APIKeyCookie(name="session")
-JWT_SECRET = SECRET_KEY
 
 
 async def valid_count_id(id_list1, id_list2):

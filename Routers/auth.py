@@ -103,6 +103,7 @@ async def callback(request: Request, db: Session = Depends(get_db)):
 
     response = RedirectResponse(url=return_url)
     response.set_cookie(key="token", value=token, httponly=True, max_age=3600, secure=False, samesite="Lax")
+    response.set_cookie(key="user", value=user_info, httponly=False, max_age=3600, secure=False, samesite="Lax")
 
     return response
 

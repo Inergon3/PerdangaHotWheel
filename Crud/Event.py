@@ -7,10 +7,12 @@ from model import EventModel
 
 
 class Event:
-    async def add(self, name, start_event, end_event, db: AsyncSession, user):
+    async def add(self, name, start_event, end_event, db: AsyncSession):
+        await event_dubl(name,db)
         new_event = EventModel(name=name, start_event=start_event, end_event=end_event)
         db.add(new_event)
         await db.commit()
+        await db.refresh(new_event)
         return new_event
 
     async def get_all(self, db: AsyncSession):
@@ -44,3 +46,12 @@ class Event:
         await db.execute(stmt)
         await db.commit()
         return events
+
+async def event_dubl(name, db: AsyncSession):
+    stmt = select(EventModel).where(EventModel.name == name)
+    result = await db.execute(stmt)
+    event = result.scalars().first()
+    if event is not None:
+        raise HTTPException(status_code=409, detail={"Error": f"Event with {name} already exists"})
+    return
+
