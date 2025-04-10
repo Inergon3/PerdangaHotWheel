@@ -27,7 +27,7 @@ app.include_router(auth_router)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the main page!"}
+    return {"message": "Welcome!"}
 
 
 if __name__ == "__main__":
