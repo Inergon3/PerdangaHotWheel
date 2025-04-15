@@ -1,27 +1,35 @@
 import datetime
-from pydantic import BaseModel
+from typing import Optional, List
+from pydantic import BaseModel, Field
 
 
-class IdSchemas(BaseModel):
-    id: list[int]
-class NamesSchemas(BaseModel):
-    names: list[str]
-class EventSchemas(BaseModel):
-    name: str | None = None
-    id: int | None = None
-    event_start: datetime.datetime = datetime.datetime.now()
-    event_end: datetime.datetime = datetime.datetime.now()
+class IdSchema(BaseModel):
+    id: List[int] = Field(..., description="List of IDs")
 
-class GameSchemas(BaseModel):
-    game_name: str | None = None
-    event_id: int | None = None
-    member_id: int | None = None
 
-class MemberSchemas(BaseModel):
-    name: str | None = None
-    id: int | None = None
+class NamesSchema(BaseModel):
+    names: List[str] = Field(..., description="List of names")
 
-class EventsMembersSchemas(BaseModel):
-    event_id: int
-    member_id: int
-    game_win: str | None = None
+
+class EventSchema(BaseModel):
+    name: Optional[str] = Field(None, description="Event name")
+    id: Optional[int] = Field(None, description="Event ID")
+    event_start: datetime.datetime = Field(default_factory=datetime.datetime.now, description="Event start time")
+    event_end: datetime.datetime = Field(default_factory=datetime.datetime.now, description="Event end time")
+
+
+class GameSchema(BaseModel):
+    game_name: Optional[str] = Field(None, description="Game name")
+    event_id: Optional[int] = Field(None, description="Event ID")
+    member_id: Optional[int] = Field(None, description="Member ID")
+
+
+class MemberSchema(BaseModel):
+    name: Optional[str] = Field(None, description="Member name")
+    id: Optional[int] = Field(None, description="Member ID")
+
+
+class EventsMembersSchema(BaseModel):
+    event_id: int = Field(..., description="Event ID")
+    member_id: int = Field(..., description="Member ID")
+    game_win: Optional[str] = Field(None, description="Winning game")

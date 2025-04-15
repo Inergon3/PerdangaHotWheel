@@ -6,13 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from Crud.objects import member_obj, eventmember_obj
 from Routers.auth import get_current_user
 from model import get_db, MemberModel
-from schemas import IdSchemas, MemberSchemas, EventsMembersSchemas
+from schemas import IdSchema, MemberSchema, EventsMembersSchema
 
 router = APIRouter(prefix="/members", tags=["members"])
 
 
 @router.post("/add")
-async def add_member_in_db(name: MemberSchemas, db: AsyncSession = Depends(get_db),
+async def add_member_in_db(name: MemberSchema, db: AsyncSession = Depends(get_db),
                            user: MemberModel = Depends(get_current_user)):
     await member_obj.add(name.name, db)
     return
@@ -45,7 +45,7 @@ async def get_members_for_list(
 
 
 @router.delete("/delete")
-async def del_members_from_list_id(id_list: IdSchemas, db: AsyncSession = Depends(get_db),
+async def del_members_from_list_id(id_list: IdSchema, db: AsyncSession = Depends(get_db),
                                    user: MemberModel = Depends(get_current_user)):
     await member_obj.del_for_id(id_list.id, db)
     return
@@ -63,7 +63,7 @@ async def get_events_for_member(member_id: int, db: AsyncSession = Depends(get_d
 
 
 @router.post("/add/win_game")
-async def add_win_game(parametrs: EventsMembersSchemas, db: AsyncSession = Depends(get_db),
+async def add_win_game(parametrs: EventsMembersSchema, db: AsyncSession = Depends(get_db),
                        user: MemberModel = Depends(get_current_user)):
     result = await eventmember_obj.add_win_game(parametrs.member_id, parametrs.event_id, db)
     return {

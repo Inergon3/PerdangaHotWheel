@@ -4,8 +4,8 @@ from alembic import context
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
-from config import user, password_bd, host, db_name
-from model import AbstractModel, EventModel, MemberModel, GameModel
+from config import DB_CONFIG
+from model import AbstractModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -17,7 +17,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 config.set_main_option("sqlalchemy.url",
-                       f"postgresql+asyncpg://{user}:{password_bd}@{host}/{db_name}" + "?async_fallback=True")
+                       f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['db_name']}")
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel

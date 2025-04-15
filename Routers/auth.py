@@ -7,9 +7,9 @@ from fastapi.responses import RedirectResponse
 from openid.consumer.consumer import Consumer, SUCCESS
 from openid.store.memstore import MemoryStore
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import steam_api_key, SECRET_KEY, JWT_ALGORITHM
+from config import APP_CONFIG
 from model import get_db, MemberModel
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -17,11 +17,11 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 openid_consumer = Consumer({}, MemoryStore())
 openid_consumer.use_stateless = True
 
-STEAM_API_KEY = steam_api_key
-JWT_SECRET = SECRET_KEY
+STEAM_API_KEY = APP_CONFIG["steam_api_key"]
+JWT_SECRET = APP_CONFIG["secret_key"]
 JWT_EXPIRE_MINUTES = 60
 
-const_return_url = "http://localhost:5500/"
+const_return_url = "http://localhost:8000/docs"
 
 
 async def get_steam_user_info(steam_id: str, api_key: str):
@@ -37,12 +37,12 @@ async def get_steam_user_info(steam_id: str, api_key: str):
 def create_jwt_token(steam_id: str):
     expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
     payload = {"sub": steam_id, "exp": expire}
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    return jwt.encode(payload, JWT_SECRET, algorithm=APP_CONFIG["jwt_algorithm"])
 
 
 def verify_jwt_token(token: str):
     try:
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[APP_CONFIG["jwt_algorithm"]])
         return payload["sub"]
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Срок действия токена истек")
@@ -50,19 +50,15 @@ def verify_jwt_token(token: str):
         raise HTTPException(status_code=401, detail="Неверный токен")
 
 
-async def get_current_user(token: str = Cookie(None), db: Session = Depends(get_db)):
+async def get_current_user(token: str = Cookie(None), db: AsyncSession = Depends(get_db)):
     if not token:
-        raise HTTPException(status_code=401, detail="Токен отсутствует в cookie")
-
+        raise HTTPException(status_code=401, detail="Токен не предоставлен")
     steam_id = verify_jwt_token(token)
-
-    stmt = select(MemberModel).where(MemberModel.steam_id == steam_id)
-    result = await db.execute(stmt)
-    user = result.scalars().first()
-
+    query = select(MemberModel).where(MemberModel.steam_id == steam_id)
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=401, detail="Пользователь не найден")
-
     return user
 
 
@@ -76,7 +72,7 @@ async def login(request: Request):
 
 
 @router.get("/callback")
-async def callback(request: Request, db: Session = Depends(get_db)):
+async def callback(request: Request, db: AsyncSession = Depends(get_db)):
     query_params = dict(request.query_params)
     response = openid_consumer.complete(query_params, str(request.url))
 

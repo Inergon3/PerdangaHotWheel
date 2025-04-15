@@ -4,10 +4,10 @@ from sqlalchemy import MetaData, ForeignKey, DateTime, BigInteger
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import as_declarative, Mapped, mapped_column, relationship
 
-from config import host, user, password_bd, db_name
+from config import SQLALCHEMY_DATABASE_URL
 
 metadata = MetaData()
-engine = create_async_engine(f"postgresql+asyncpg://{user}:{password_bd}@{host}/{db_name}", echo=True)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 SessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 async def get_db() -> AsyncSession:
